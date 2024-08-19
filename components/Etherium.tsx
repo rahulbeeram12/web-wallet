@@ -11,7 +11,7 @@ export const Etherium = (props: { Keys: string[] }) => {
     return <div className="w-full overflow-y-scroll hide-scrollbar">
         {
             keys.map((publicKey) => {
-                return <Card key={publicKey} PublicKey={publicKey} Eth={true} />
+                return <Card key={publicKey} publicKey={publicKey} Eth={true} />
             })
         }
     </div>
