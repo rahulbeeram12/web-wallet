@@ -8,6 +8,7 @@ import nacl from 'tweetnacl';
 import { Keypair } from '@solana/web3.js';
 import { HDNodeWallet } from 'ethers';
 import { Wallet } from 'ethers';
+import { Button } from '@nextui-org/button';
 
 export const HdWallet = () => {
     const [ethAccountNumber, setEthAccountNumber] = useState<number>(0);
@@ -41,7 +42,7 @@ export const HdWallet = () => {
             const privateKey = child.privateKey;
             const wallet = new Wallet(privateKey);
             const publicKey = await wallet.getAddress();
-            
+
             setEthKeys((previousEthKeys) => [
                 publicKey,
                 ...previousEthKeys
@@ -79,7 +80,9 @@ export const HdWallet = () => {
         <div className="w-full">
             <div className="mt-10 flex justify-evenly items-center">
                 <h3 className="font-bold">Generate Mnemonic</h3>
-                <button type="button" onClick={generateMnemonicAndSeed} className="text-white bg-green-500 focus:outline-none font-medium rounded-full text-sm px-5 py-2.5 text-center">Generate</button>
+                <Button size="lg" onClick={generateMnemonicAndSeed}>
+                    Generate
+                </Button>
             </div>
         </div>
         {
@@ -100,8 +103,8 @@ export const HdWallet = () => {
                         </div>
                     </div>
                     <div className="flex justify-around items-center mb-5">
-                        <button type="button" onClick={addNewEtheriumKeyPair} className="text-white bg-green-500 focus:outline-none font-medium rounded-full text-sm px-5 py-2.5 text-center">Generate Etherium key pair</button>
-                        <button type="button" onClick={addNewSolanaKeyPair} className="text-white bg-green-500 focus:outline-none font-medium rounded-full text-sm px-5 py-2.5 text-center">Generate Solana key pair</button>
+                        <Button size="lg" onClick={addNewEtheriumKeyPair}>Generate Etherium key pair</Button>
+                        <Button size="lg" onClick={addNewSolanaKeyPair}>Generate Solana key pair</Button>
                     </div>
                     <div className="flex justify-center items-center">
                         <div className="flex items-center justify-center bg-gray-300 h-[35rem] rounded-3xl w-full mx-20">

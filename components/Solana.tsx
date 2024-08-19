@@ -11,7 +11,7 @@ export const Solana = (props: { Keys: string[] }) => {
     return <div className="w-full overflow-y-scroll hide-scrollbar">
         {
             keys.map((publicKey) => {
-                return <Card key={publicKey} PublicKey={publicKey} Eth={false} />
+                return <Card key={publicKey} publicKey={publicKey} Eth={false} />
             })
         }
     </div>
