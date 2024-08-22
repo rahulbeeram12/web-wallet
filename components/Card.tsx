@@ -107,7 +107,7 @@ export const Card = ({ etheriumKeyPair, Eth, solanaKeyPair }: {
 
     const fetchBalance = async () => {
         if (URL) {
-            const params = [`${Eth ? etheriumKeyPair?.PrivateKey : solanaKeyPair?.publicKey.toBase58()}`];
+            const params = [`${Eth ? etheriumKeyPair?.PublicKey : solanaKeyPair?.publicKey.toBase58()}`];
             if (Eth) params.push("latest");
 
             const response = await fetch(URL, {
