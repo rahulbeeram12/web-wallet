@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { Card } from "./Card";
 
-export const Etherium = (props: { Keys: string[] }) => {
-    const [keys, setKeys] = useState<string[]>([]);
+export const Etherium = (props: { Keypairs: { PrivateKey: string, PublicKey: string }[] }) => {
+    const [keypairs, setKeypairs] = useState<{ PrivateKey: string, PublicKey: string }[]>([]);
 
     useEffect(() => {
-        setKeys(() => [...props.Keys]);
-    }, [props.Keys]);
-    
+        setKeypairs(() => [...props.Keypairs]);
+    }, [props.Keypairs]);
+
     return <div className="w-full overflow-y-scroll hide-scrollbar">
         {
-            keys.map((publicKey) => {
-                return <Card key={publicKey} publicKey={publicKey} Eth={true} />
+            keypairs.map((Keypair) => {
+                return <Card key={Keypair.PublicKey} etheriumKeyPair={Keypair} Eth={true} />
             })
         }
     </div>

@@ -16,8 +16,8 @@ export const HdWallet = () => {
 
     const [mnemonic, setMnemonic] = useState<Array<string>>();
     const [masterSeed, setMasterSeed] = useState<Uint8Array>();
-    const [solanaKeys, setSolanaKeys] = useState<Array<string>>([]);
-    const [ethKeys, setEthKeys] = useState<Array<string>>([]);
+    const [solanaKeys, setSolanaKeys] = useState<Array<Keypair>>([]);
+    const [ethKeys, setEthKeys] = useState<Array<{ PrivateKey: string, PublicKey: string }>>([]);
 
     const generateMnemonicAndSeed = () => {
         // 12 words mnemonic
@@ -43,9 +43,12 @@ export const HdWallet = () => {
             const wallet = new Wallet(privateKey);
             const publicKey = await wallet.getAddress();
 
-            setEthKeys((previousEthKeys) => [
-                publicKey,
-                ...previousEthKeys
+            setEthKeys((previousEthKeypairs) => [
+                {
+                    PrivateKey: privateKey,
+                    PublicKey: publicKey
+                },
+                ...previousEthKeypairs
             ]);
 
             setEthAccountNumber(ethAccountNumber + 1);
@@ -58,11 +61,11 @@ export const HdWallet = () => {
         if (masterSeed) {
             const derivedSeed = derivePath(derivationPath, Buffer.from(masterSeed).toString('hex')).key;
             const secret = nacl.sign.keyPair.fromSeed(derivedSeed).secretKey;
-            const publicKey = Keypair.fromSecretKey(secret).publicKey.toBase58(); // solana converts to base58
+            const currentKeypair = Keypair.fromSecretKey(secret);
 
-            setSolanaKeys((previousSolanaKeys) => [
-                publicKey,
-                ...previousSolanaKeys
+            setSolanaKeys((previousSolanaKeypairs) => [
+                currentKeypair,
+                ...previousSolanaKeypairs
             ]);
 
             setSolAccountNumber(solAccountNumber + 1);
@@ -109,12 +112,12 @@ export const HdWallet = () => {
                     <div className="flex justify-center items-center">
                         <div className="flex items-center justify-center bg-gray-300 h-[35rem] rounded-3xl w-full mx-20">
                             <div className="flex w-full justify-around h-full">
-                                <Etherium Keys={ethKeys} />
+                                <Etherium Keypairs={ethKeys} />
                             </div>
                         </div>
                         <div className="flex items-center justify-center bg-gray-300 h-[35rem] rounded-3xl w-full mx-20">
                             <div className="flex w-full justify-around h-full">
-                                <Solana Keys={solanaKeys} />
+                                <Solana Keypairs={solanaKeys} />
                             </div>
                         </div>
                     </div>

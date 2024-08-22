@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
 import { Card } from "./Card";
+import { Keypair } from "@solana/web3.js";
 
-export const Solana = (props: { Keys: string[] }) => {
-    const [keys, setKeys] = useState<string[]>([]);
+export const Solana = (props: { Keypairs: Keypair[] }) => {
+    const [keypairs, setKeypairs] = useState<Keypair[]>([]);
 
     useEffect(() => {
-        setKeys(() => [...props.Keys]);
-    }, [props.Keys]);
+        setKeypairs(() => [...props.Keypairs]);
+    }, [props.Keypairs]);
 
     return <div className="w-full overflow-y-scroll hide-scrollbar">
         {
-            keys.map((publicKey) => {
-                return <Card key={publicKey} publicKey={publicKey} Eth={false} />
+            keypairs.map((keypair) => {
+                return <Card key={keypair.publicKey.toBase58()} solanaKeyPair={keypair} Eth={false} />
             })
         }
     </div>
