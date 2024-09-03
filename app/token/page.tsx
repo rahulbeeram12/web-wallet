@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button, Card, CardBody, Input, Link, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from "@nextui-org/react";
-import { AccountLayout, createMint, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { Button, Card, CardBody, Input, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from "@nextui-org/react";
+import { AccountLayout, createMint, TOKEN_PROGRAM_ID, getOrCreateAssociatedTokenAccount } from '@solana/spl-token';
 import { clusterApiUrl, Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { mnemonicToSeedSync } from 'bip39';
 
@@ -10,6 +10,12 @@ interface TokenInfo {
     PrivateKey: string,
     MintAuthority: string,
     Decimals: number
+}
+
+interface AssociateTokenAccount {
+    MintAccount: string,
+    Owner: string,
+    Account: string
 }
 
 const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
@@ -24,8 +30,10 @@ const Token = () => {
         balance: number
     }>>();
     const [loadingTokenAccounts, setLoadingTokenAccounts] = useState<boolean>(false);
-    const [creatingToken, setCreatingToken] = useState(false);
+    const [creatingToken, setCreatingToken] = useState<boolean>(false);
+    const [creatingAssociateTokenAccount, setCreatingAssociateTokenAccount] = useState<boolean>(false);
     const [mintAccounts, setMintAccounts] = useState<Array<string>>([]);
+    const [associateTokenAccounts, setAssociateTokenAccounts] = useState<Array<AssociateTokenAccount> | undefined>();
 
     const getTokenMints = async () => {
         if (!publicAddress) {
@@ -104,6 +112,36 @@ const Token = () => {
         return true;
     }
 
+    const createAssociatedTokenAccount = async (mintAccount: string) => {
+        try {
+            setCreatingAssociateTokenAccount(true);
+            tokenInfo.PrivateKey = tokenInfo.PrivateKey.trim();
+            const seed = mnemonicToSeedSync(tokenInfo.PrivateKey);
+            const keypair = Keypair.fromSeed(seed.slice(0, 32));
+
+            const ata = await getOrCreateAssociatedTokenAccount(
+                connection,
+                keypair,
+                new PublicKey(mintAccount),
+                keypair.publicKey
+            );
+            console.log(ata);
+
+            const prevAtas = associateTokenAccounts === undefined ? [] : associateTokenAccounts;
+            prevAtas.push({
+                MintAccount: mintAccount,
+                Account: ata.address.toBase58(),
+                Owner: tokenInfo.MintAuthority
+            });
+            setAssociateTokenAccounts(prevAtas);
+        } catch (e) {
+            alert('Something went wrong while creating associate token account');
+            console.log(e);
+        } finally {
+            setCreatingAssociateTokenAccount(false);
+        }
+    }
+
     return (
         <div>
             <div className="text-2xl flex justify-center m-5"><p>Solana Token Accounts</p></div>
@@ -130,50 +168,64 @@ const Token = () => {
                     </div>
                 </div>
             </div>
-            <div className="grid grid-cols-1 w-[35%] mx-14">
-                {
-                    tokenAccounts?.map((tokenAccount, idx) => {
-                        return (
-                            <Card key={idx} className="mx-7">
-                                <div className="p-4">
-                                    <p className="font-bold">Token Mint Details</p>
-                                    <CardBody className="bg-neutral-200 rounded-xl mt-3 w-full">
-                                        <p className="flex justify-between">
-                                            Account: {tokenAccount.mintAccount}
-                                            <span className="material-symbols-outlined cursor-pointer" onClick={async () => {
-                                                if (publicAddress) await navigator.clipboard.writeText(publicAddress);
-                                            }}>
-                                                content_copy
-                                            </span>
-                                        </p>
-                                        <p>Balance: {tokenAccount.balance} SOL</p>
-                                    </CardBody>
-                                </div>
-                            </Card>);
-                    })
-                }
-            </div>
-            <div className="grid relative grid-cols-1 ml-[47%] mr-36">
-                {
-                    mintAccounts?.map((tokenAccount, idx) => {
-                        return (
-                            <Card key={idx} className="mx-7">
-                                <div className="p-4">
-                                    <p className="font-bold">Token Mint Details</p>
-                                    <CardBody className="bg-neutral-200 rounded-xl mt-3 w-full">
-                                        <p className="flex justify-between">
-                                            Mint Account: {tokenAccount}
-                                            <span className="material-symbols-outlined cursor-pointer" onClick={async () => {
-                                                if (publicAddress) await navigator.clipboard.writeText(publicAddress);
-                                            }}>
-                                                content_copy
-                                            </span>
-                                        </p>
-                                    </CardBody>
-                                </div>
-                            </Card>);
-                    })
-                }
+            <div className="flex">
+                <div className="grid grid-cols-1 w-[35%] mx-14 gap-4">
+                    {
+                        tokenAccounts?.map((tokenAccount, idx) => {
+                            return (
+                                <Card key={idx} className="mx-7">
+                                    <div className="p-4">
+                                        <p className="font-bold">Token Mint Details</p>
+                                        <CardBody className="bg-neutral-200 rounded-xl mt-3 w-full">
+                                            <p className="flex justify-between">
+                                                Account: {tokenAccount.mintAccount}
+                                                <span className="material-symbols-outlined cursor-pointer" onClick={async () => {
+                                                    if (tokenAccount.mintAccount) await navigator.clipboard.writeText(tokenAccount.mintAccount);
+                                                }}>
+                                                    content_copy
+                                                </span>
+                                            </p>
+                                            <p>Balance: {tokenAccount.balance} SOL</p>
+                                        </CardBody>
+                                    </div>
+                                </Card>);
+                        })
+                    }
+                </div>
+                <div className="grid grid-cols-1 w-[40%] ml-44 gap-4">
+                    {
+                        mintAccounts?.map((mintAccount, idx) => {
+                            return (
+                                <Card key={idx} className="mx-7 h-48">
+                                    <div className="p-4">
+                                        <p className="font-bold">Token Mint Details</p>
+                                        <CardBody className="bg-neutral-200 rounded-xl mt-3 w-full">
+                                            <p className="flex justify-between">
+                                                Mint Account: {mintAccount}
+                                                <span className="material-symbols-outlined cursor-pointer" onClick={async () => {
+                                                    if (mintAccount) await navigator.clipboard.writeText(mintAccount);
+                                                }}>
+                                                    content_copy
+                                                </span>
+                                            </p>
+                                        </CardBody>
+                                    </div>
+                                    <div className="flex items-center justify-around">
+                                        <div>
+                                            <Button size="lg" onClick={() => createAssociatedTokenAccount(mintAccount)}>
+                                                {creatingAssociateTokenAccount ? 'Creating...' : 'Create Associate Token Account'}
+                                            </Button>
+                                        </div>
+                                        <div>
+                                            <Button size="lg" onClick={onOpen}>
+                                                Show Associate Token Accounts
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </Card>);
+                        })
+                    }
+                </div >
             </div>
             <Modal
                 isOpen={isOpen}
@@ -239,7 +291,7 @@ const Token = () => {
                                         onClose();
                                     }
                                 }}>
-                                    { creatingToken ? 'Creating...' : 'Create Token'}
+                                    {creatingToken ? 'Creating...' : 'Create Token'}
                                 </Button>
                             </ModalFooter>
                         </>
